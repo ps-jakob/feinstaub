@@ -67,7 +67,7 @@
   </button>
 
   <div class="data_container">
-    <div class="col-12 mt-4" id="tempHumidityView">
+    <div class="col-12 mt-4" id="2">
       <h3>Temperatur und Feuchtigkeit</h3>
       <div class="row">
         <div class="col-6">
@@ -79,7 +79,7 @@
       </div>
     </div>
 
-    <div class="col-12 mt-4" id="particleView">
+    <div class="col-12 mt-4" id="1">
       <h3>Partikelkonzentration</h3>
       <div class="row">
         <div class="col-6">
@@ -147,7 +147,7 @@
         // Get values from the date inputs
         let startDate = $("#date-picker1").val();
         let endDate = $("#date-picker2").val();
-        let selectedSensor = $("#sensorSelect").val();
+        let sensorId = $("#sensorSelect").val();
 
         // Validate that both dates are selected
         if (!startDate || !endDate) {
@@ -166,31 +166,33 @@
           return;
         }
 
-        // Send AJAX GET request to Spring Boot backend
-        $.ajax({
-          url: "/measurement/get",
-          type: "GET",
-          data: {
-            startDate: startDate,
-            endDate: endDate,
-            sensorType: selectedSensor
-          },
-          dataType: "json", // Expecting a JSON response
-          success: function (data) {
-            if (selectedSensor === 'temp') {
-              updateTempHumidityCharts(data);
-            } else if (selectedSensor === 'particle') {
-              updateParticleCharts(data);
+             $.ajax({
+            url: "/api/get-measurements",
+            type: "GET",
+            data: {
+                vonDatum: startDate,
+                bisDatum: endDate,
+                sensorId: sensorId
+            },
+            dataType: "json",
+            success: function (response) {
+                console.log(response); // Debugging-Ausgabe in der Konsole
+
+                // Entscheide, ob Temperatur oder Partikeldaten angezeigt werden sollen
+                if (sensorId === "temp") {
+                    updateTempHumidityCharts(response);
+                } else if (sensorId === "particle") {
+                    updateParticleCharts(response);
+                }
+            },
+            error: function (xhr) {
+                let errorMsg = xhr.responseJSON ? xhr.responseJSON.error : "Ein Fehler ist aufgetreten.";
+                showError(errorMsg);
             }
-          },
-          error: function (xhr, status, error) {
-            let errorMessage = "Ein unerwarteter Fehler ist aufgetreten.";
-            if (xhr.responseJSON && xhr.responseJSON.error) {
-              errorMessage = xhr.responseJSON.error;
-            }
-            showError(errorMessage);
-          }
         });
+
+        //HERE
+
       });
 
       function updateTempHumidityCharts(data) {

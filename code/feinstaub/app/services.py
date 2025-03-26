@@ -1,5 +1,6 @@
 from .models import db, Sensor, DustMeasurement, WeatherMeasurement
-from sqlalchemy import func
+from sqlalchemy import func, nullsfirst
+
 
 def get_all_sensors():
     """Gibt alle Sensoren zurück."""
@@ -29,3 +30,16 @@ def get_avg_temperature(sensor_id, start_date, end_date):
 def get_latest_dust_measurement(sensor_id):
     """Holt die neueste Staubmessung für einen Sensor."""
     return DustMeasurement.query.filter_by(sensor_id=sensor_id).order_by(DustMeasurement.timestamp.desc()).first()
+
+
+def get_max_p1():
+    return 0
+
+def get_min_p1():
+    return 0
+
+def get_max_p2():
+    return 0
+
+def get_min_p2():
+    return 0
