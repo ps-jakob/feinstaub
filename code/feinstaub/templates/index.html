@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/data_view.css') }}">
+
+
+  <title>Daten anzeigen</title>
+  <style>
+    [data-theme='dark'] .modal-content {
+      background-color: #333;
+      color: #fff;
+    }
+    [data-theme='dark'] .modal-header {
+      border-bottom: 1px solid #444;
+    }
+    [data-theme='dark'] .modal-footer {
+      border-top: 1px solid #444;
+    }
+    [data-theme='dark'] .btn-close {
+      filter: invert(1) grayscale(100%) brightness(200%);
+    }
+    [data-theme='dark'] .alert-danger {
+      background-color: #dc354522;
+      color: #ff6b6b;
+      border-color: #dc3545;
+    }
+  </style>
+</head>
+<body data-bs-theme="light">
+  <div class="container">
+    <div class="row justify-content-between">
+      <div class="col-3">
+        <label for="date-picker1">Von Datum</label>
+        <input class="form-control" id="date-picker1" type="date" th:value="${startDate}">
+        <small class="invalid-feedback" id="date-picker1Feedback">Das Von Datum kann nicht größer als das Bis Datum sein.</small>
+      </div>
+      <div class="col-3">
+        <label for="date-picker2">Bis Datum</label>
+        <input class="form-control" id="date-picker2" type="date" th:value="${endDate}">
+      </div>
+      <div class="col-3">
+        <label for="sensorSelect">Sensor</label>
+        <select class="form-select" id="sensorSelect" aria-label="Sensor auswählen">
+          <option selected disabled>Sensor auswählen</option>
+          <option value="temp">Temperatur & Feuchtigkeitssensor</option>
+          <option value="particle">Partikelsensor</option>
+        </select>
+      </div>
+      <div class="col-2 d-flex justify-content-end align-items-end">
+        <button class="btn btn-primary" id="fetchDataBtn">Daten abrufen</button>
+      </div>
+    </div>
+  </div>
+
+  <button class="theme-toggle-fixed" id="themeToggle">
+    <i class="fas fa-moon"></i>
+  </button>
+
+  <div class="data_container">
+    <div class="col-12 mt-4" id="tempHumidityView">
+      <h3>Temperatur und Feuchtigkeit</h3>
+      <div class="row">
+        <div class="col-6">
+          <canvas id="temperatureChart"></canvas>
+        </div>
+        <div class="col-6">
+          <canvas id="humidityChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 mt-4" id="particleView">
+      <h3>Partikelkonzentration</h3>
+      <div class="row">
+        <div class="col-6">
+          <canvas id="pm25Chart"></canvas>
+        </div>
+        <div class="col-6">
+          <canvas id="pm10Chart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Remove the example modal -->
+  <!-- Keep only the error modal -->
+  <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="errorModalLabel">Fehler</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-danger" role="alert" id="errorMessage"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Schließen</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script th:fragment="javascript" crossorigin="anonymous" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" ></script>
+  <script th:fragment="javascript" crossorigin="anonymous" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" src="https://code.jquery.com/jquery-3.7.1.js"></script>
+  <script th:fragment="javascript" src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+  <script th:fragment="javascript" crossorigin="anonymous" src="https://kit.fontawesome.com/2d9c5ca4b5.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script>
+    let temperatureChart = null;
+    let humidityChart = null;
+    let pm25Chart = null;
+    let pm10Chart = null;
+
+    $(document).ready(function () {
+      // View switching logic
+      $("#sensorSelect").change(function() {
+        const selectedSensor = $(this).val();
+        if (selectedSensor === 'temp') {
+          $("#tempHumidityView").show();
+          $("#particleView").hide();
+        } else if (selectedSensor === 'particle') {
+          $("#tempHumidityView").hide();
+          $("#particleView").show();
+        }
+      });
+
+      // Add this function to show error messages
+      function showError(message) {
+        $('#errorMessage').text(message);
+        $('#errorModal').modal('show');
+      }
+
+      // Update validation messages to use showError
+      $("#fetchDataBtn").click(function () {
+        // Get values from the date inputs
+        let startDate = $("#date-picker1").val();
+        let endDate = $("#date-picker2").val();
+        let selectedSensor = $("#sensorSelect").val();
+
+        // Validate that both dates are selected
+        if (!startDate || !endDate) {
+          showError("Bitte wählen Sie beide Daten aus.");
+          return;
+        }
+
+        // Validate that start date is not greater than end date
+        if (startDate > endDate) {
+          showError("Das Startdatum darf nicht größer als das Enddatum sein.");
+          return;
+        }
+
+        if (!selectedSensor) {
+          showError('Bitte wählen Sie einen Sensor aus.');
+          return;
+        }
+
+        // Send AJAX GET request to Spring Boot backend
+        $.ajax({
+          url: "/measurement/get",
+          type: "GET",
+          data: {
+            startDate: startDate,
+            endDate: endDate,
+            sensorType: selectedSensor
+          },
+          dataType: "json", // Expecting a JSON response
+          success: function (data) {
+            if (selectedSensor === 'temp') {
+              updateTempHumidityCharts(data);
+            } else if (selectedSensor === 'particle') {
+              updateParticleCharts(data);
+            }
+          },
+          error: function (xhr, status, error) {
+            let errorMessage = "Ein unerwarteter Fehler ist aufgetreten.";
+            if (xhr.responseJSON && xhr.responseJSON.error) {
+              errorMessage = xhr.responseJSON.error;
+            }
+            showError(errorMessage);
+          }
+        });
+      });
+
+      function updateTempHumidityCharts(data) {
+        // Temperature Chart
+        const temps = data.map(m => m.temperature);
+        const tempStats = {
+          min: Math.min(...temps),
+          max: Math.max(...temps),
+          avg: temps.reduce((a, b) => a + b, 0) / temps.length
+        };
+
+        updateChart('temperatureChart', tempStats, 'Temperatur (°C)', ['#54B4EB', '#FFD93D', '#FF6B6B']);
+
+        // Humidity Chart
+        const humidity = data.map(m => m.humidity);
+        const humidityStats = {
+          min: Math.min(...humidity),
+          max: Math.max(...humidity),
+          avg: humidity.reduce((a, b) => a + b, 0) / humidity.length
+        };
+
+        updateChart('humidityChart', humidityStats, 'Luftfeuchtigkeit (%)', ['#82E0AA', '#F8C471', '#EC7063']);
+      }
+
+      function updateParticleCharts(data) {
+        // PM2.5 Chart
+        const pm25 = data.map(m => m.pm25);
+        const pm25Stats = {
+          min: Math.min(...pm25),
+          max: Math.max(...pm25),
+          avg: pm25.reduce((a, b) => a + b, 0) / pm25.length
+        };
+
+        updateChart('pm25Chart', pm25Stats, 'PM2.5 (µg/m³)', ['#AED6F1', '#F9E79F', '#F5B7B1']);
+
+        // PM10 Chart
+        const pm10 = data.map(m => m.pm10);
+        const pm10Stats = {
+          min: Math.min(...pm10),
+          max: Math.max(...pm10),
+          avg: pm10.reduce((a, b) => a + b, 0) / pm10.length
+        };
+
+        updateChart('pm10Chart', pm10Stats, 'PM10 (µg/m³)', ['#A9CCE3', '#FAD7A0', '#F1948A']);
+      }
+
+      function updateChart(canvasId, stats, label, colors) {
+        if (window[canvasId]) {
+          window[canvasId].destroy();
+        }
+
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        window[canvasId] = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: ['Minimum', 'Durchschnitt', 'Maximum'],
+            datasets: [{
+              label: label,
+              data: [stats.min, stats.avg, stats.max],
+              backgroundColor: colors.map(c => c + '80'),
+              borderColor: colors,
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            scales: {
+              y: {
+                beginAtZero: false,
+                title: {
+                  display: true,
+                  text: label
+                }
+              }
+            },
+            plugins: {
+              title: {
+                display: true,
+                text: label + ' Statistiken'
+              }
+            }
+          }
+        });
+      }
+
+      // Dark mode toggle
+      const themeToggle = $('#themeToggle');
+      const html = $('html');
+      const icon = themeToggle.find('i');
+
+      themeToggle.click(function() {
+        if (html.attr('data-theme') === 'light') {
+          html.attr('data-theme', 'dark');
+          icon.removeClass('fa-moon').addClass('fa-sun');
+          localStorage.setItem('theme', 'dark');
+          $('body').attr('data-bs-theme', 'dark');
+        } else {
+          html.attr('data-theme', 'light');
+          icon.removeClass('fa-sun').addClass('fa-moon');
+          localStorage.setItem('theme', 'light');
+          $('body').attr('data-bs-theme', 'light');
+        }
+      });
+
+      // Check for saved theme preference
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      html.attr('data-theme', savedTheme);
+      $('body').attr('data-bs-theme', savedTheme);
+      if (savedTheme === 'dark') {
+        icon.removeClass('fa-moon').addClass('fa-sun');
+      }
+    });
+//
+    //   document.addEventListener("DOMContentLoaded", function () {
+    //   let datePicker1 = document.getElementById("date-picker1");
+    //   let datePicker2 = document.getElementById("date-picker2");
+    //
+    //   // Set min and max date for the year 2022
+    //   let minDate = "2022-01-01";
+    //   let maxDate = "2022-12-31";
+    //
+    //   datePicker1.setAttribute("min", minDate);
+    //   datePicker1.setAttribute("max", maxDate);
+    //   datePicker2.setAttribute("min", minDate);
+    //   datePicker2.setAttribute("max", maxDate);
+    //   datePicker1.setAttribute("value",)
+    //
+    //   // Prevent manual entry of out-of-range dates
+    //   function validateDateInput(input) {
+    //   let selectedDate = input.value;
+    //   if (selectedDate < minDate || selectedDate > maxDate) {
+    //   input.value = "";
+    //   alert("Bitte wählen Sie ein Datum im Jahr 2022.");
+    // }
+    // }
+    //
+    //   datePicker1.addEventListener("change", function () {
+    //   validateDateInput(this);
+    // });
+    //
+    //   datePicker2.addEventListener("change", function () {
+    //   validateDateInput(this);
+    // });
+    // });
+
+
+  </script>
+
+
+</body>
+</html>
