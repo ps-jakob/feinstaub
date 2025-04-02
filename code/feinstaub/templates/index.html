@@ -14,6 +14,7 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/data_view.css') }}">
 
 
+
   <title>Daten anzeigen</title>
   <style>
     [data-theme='dark'] .modal-content {
@@ -41,19 +42,19 @@
     <div class="row justify-content-between">
       <div class="col-3">
         <label for="date-picker1">Von Datum</label>
-        <input class="form-control" id="date-picker1" type="date" th:value="${startDate}">
+        <input class="form-control" id="date-picker1" type="date">
         <small class="invalid-feedback" id="date-picker1Feedback">Das Von Datum kann nicht größer als das Bis Datum sein.</small>
       </div>
       <div class="col-3">
         <label for="date-picker2">Bis Datum</label>
-        <input class="form-control" id="date-picker2" type="date" th:value="${endDate}">
+        <input class="form-control" id="date-picker2" type="date">
       </div>
       <div class="col-3">
         <label for="sensorSelect">Sensor</label>
         <select class="form-select" id="sensorSelect" aria-label="Sensor auswählen">
           <option selected disabled>Sensor auswählen</option>
-          <option value="temp">Temperatur & Feuchtigkeitssensor</option>
-          <option value="particle">Partikelsensor</option>
+          <option value="113">Temperatur & Feuchtigkeitssensor</option>
+          <option value="11496">Partikelsensor</option>
         </select>
       </div>
       <div class="col-2 d-flex justify-content-end align-items-end">
@@ -111,10 +112,10 @@
     </div>
   </div>
 
-  <script th:fragment="javascript" crossorigin="anonymous" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" ></script>
-  <script th:fragment="javascript" crossorigin="anonymous" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" src="https://code.jquery.com/jquery-3.7.1.js"></script>
-  <script th:fragment="javascript" src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
-  <script th:fragment="javascript" crossorigin="anonymous" src="https://kit.fontawesome.com/2d9c5ca4b5.js"></script>
+  <script crossorigin="anonymous" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" ></script>
+  <script crossorigin="anonymous" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" src="https://code.jquery.com/jquery-3.7.1.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+  <script crossorigin="anonymous" src="https://kit.fontawesome.com/2d9c5ca4b5.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <script>
@@ -127,10 +128,10 @@
       // View switching logic
       $("#sensorSelect").change(function() {
         const selectedSensor = $(this).val();
-        if (selectedSensor === 'temp') {
+        if (selectedSensor === '113') {
           $("#tempHumidityView").show();
           $("#particleView").hide();
-        } else if (selectedSensor === 'particle') {
+        } else if (selectedSensor === '11496') {
           $("#tempHumidityView").hide();
           $("#particleView").show();
         }
@@ -161,7 +162,7 @@
           return;
         }
 
-        if (!selectedSensor) {
+        if (!sensorId) {
           showError('Bitte wählen Sie einen Sensor aus.');
           return;
         }
