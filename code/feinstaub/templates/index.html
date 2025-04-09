@@ -14,7 +14,6 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/data_view.css') }}">
 
 
-
   <title>Daten anzeigen</title>
   <style>
     [data-theme='dark'] .modal-content {
@@ -68,7 +67,7 @@
   </button>
 
   <div class="data_container">
-    <div class="col-12 mt-4" id="2">
+    <div class="col-12 mt-4" id="tempHumidityView" style="display: none;">
       <h3>Temperatur und Feuchtigkeit</h3>
       <div class="row">
         <div class="col-6">
@@ -80,7 +79,7 @@
       </div>
     </div>
 
-    <div class="col-12 mt-4" id="1">
+    <div class="col-12 mt-4" id="particleView" style="display: none;">
       <h3>Partikelkonzentration</h3>
       <div class="row">
         <div class="col-6">
