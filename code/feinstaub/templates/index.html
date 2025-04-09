@@ -182,6 +182,7 @@
               console.log(response); // Debugging-Ausgabe in der Konsole
 
 
+              var sensorId = response.sensorId;
               var dates = response.dates
               var chartData = response.measurements
               const avgP1 = chartData.map(m => m.avg_p1);

@@ -61,6 +61,7 @@ def get_selected_measurement(sensor_id, start_date, end_date):
             data.append(asdict(entry))
 
     return {
+        "sensorId": int(sensor_id),
         "dates": dates,
         "measurements": data
     }
