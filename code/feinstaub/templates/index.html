@@ -150,6 +150,9 @@
         let endDate = $("#date-picker2").val();
         let sensorId = $("#sensorSelect").val();
 
+        console.log(sensorId)
+
+
         // Validate that both dates are selected
         if (!startDate || !endDate) {
           showError("Bitte wählen Sie beide Daten aus.");
@@ -177,14 +180,17 @@
             },
             dataType: "json",
             success: function (response) {
-                console.log(response); // Debugging-Ausgabe in der Konsole
+              console.log(response); // Debugging-Ausgabe in der Konsole
 
-                // Entscheide, ob Temperatur oder Partikeldaten angezeigt werden sollen
-                if (sensorId === "temp") {
-                    updateTempHumidityCharts(response);
-                } else if (sensorId === "particle") {
-                    updateParticleCharts(response);
-                }
+
+              var dates = response.dates
+              var chartData = response.measurements
+              const avgP1 = chartData.map(m => m.avg_p1);
+              const minP1 = chartData.map(m => m.min_p1);
+              const maxP1 = chartData.map(m => m.max_p1);
+
+              updateParticleCharts(dates, avgP1, minP1, maxP1)
+
             },
             error: function (xhr) {
                 let errorMsg = xhr.responseJSON ? xhr.responseJSON.error : "Ein Fehler ist aufgetreten.";
@@ -218,7 +224,7 @@
         updateChart('humidityChart', humidityStats, 'Luftfeuchtigkeit (%)', ['#82E0AA', '#F8C471', '#EC7063']);
       }
 
-      function updateParticleCharts(data) {
+      function updateParticleCharts(dates, avgP1, minP1, maxP1) {
         // PM2.5 Chart
         const pm25 = data.map(m => m.pm25);
         const pm25Stats = {
@@ -240,16 +246,16 @@
         updateChart('pm10Chart', pm10Stats, 'PM10 (µg/m³)', ['#A9CCE3', '#FAD7A0', '#F1948A']);
       }
 
-      function updateChart(canvasId, stats, label, colors) {
+      function updateChart(canvasId, dates) {
         if (window[canvasId]) {
           window[canvasId].destroy();
         }
 
         const ctx = document.getElementById(canvasId).getContext('2d');
         window[canvasId] = new Chart(ctx, {
-          type: 'bar',
+          type: 'line',
           data: {
-            labels: ['Minimum', 'Durchschnitt', 'Maximum'],
+            labels: dates,
             datasets: [{
               label: label,
               data: [stats.min, stats.avg, stats.max],
