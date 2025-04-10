@@ -19,11 +19,14 @@ def get_sensor_by_name(sensor_name):
 
 def get_selected_measurement(sensor_id, start_date, end_date):
 
+
     dates = generate_date_range(start_date, end_date)
+    formatted_dates = [
+        datetime.strptime(date_str, "%Y-%m-%d").strftime("%d.%m.%Y")
+        for date_str in dates
+    ]
     data = []
 
-    print("Dates:")
-    print(dates)
 
     if int(sensor_id) == 11496:
         print("ist in 11496")
@@ -31,9 +34,9 @@ def get_selected_measurement(sensor_id, start_date, end_date):
             entry = ChartDustEntry(
                 max_p1= get_max_p1(date),
                 min_p1=get_min_p1(date),
+                avg_p1=get_avg_p1(date),
                 max_p2= get_max_p2(date),
                 min_p2= get_min_p2(date),
-                avg_p1= get_avg_p1(date),
                 avg_p2= get_avg_p2(date),
             )
             data.append(asdict(entry))
@@ -62,7 +65,7 @@ def get_selected_measurement(sensor_id, start_date, end_date):
 
     return {
         "sensorId": int(sensor_id),
-        "dates": dates,
+        "dates": formatted_dates,
         "measurements": data
     }
 

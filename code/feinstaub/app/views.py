@@ -1,11 +1,18 @@
 from flask import Blueprint, render_template
 from .models import Sensor
+from datetime import datetime
 
 views = Blueprint('views', __name__)
 
 @views.route('/')
 def index():
-    return render_template('index.html')  # Lädt index.html aus dem templates-Ordner
+    start = datetime(2022, 1, 1).strftime("%Y-%m-%d")
+    end = datetime(2022, 1, 10).strftime("%Y-%m-%d")
+    return render_template(
+        'index.html',
+        startDate=start,
+        endDate=end
+                           )  # Lädt index.html aus dem templates-Ordner
 
 ## @views.route('/sensors')
 ## def show_sensors():

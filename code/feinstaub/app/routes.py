@@ -81,5 +81,4 @@ def get_measurements_api():
 
 
     measurements = get_selected_measurement(sensor_id, start_date, end_date)
-    print(measurements)
     return jsonify(measurements)
