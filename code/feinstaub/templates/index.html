@@ -54,8 +54,8 @@
         <label for="sensorSelect">Sensor</label>
         <select class="form-select" id="sensorSelect" aria-label="Sensor auswählen">
           <option selected disabled>Sensor auswählen</option>
-          <option value="113">Temperatur & Feuchtigkeitssensor</option>
-          <option value="11496">Partikelsensor</option>
+          <option value="113">Temperatur & Feuchtigkeitssensor (113)</option>
+          <option value="11496">Partikelsensor (11496)</option>
         </select>
       </div>
       <div class="col-2 d-flex justify-content-end align-items-end">
@@ -86,7 +86,27 @@
         </div>
       </div>
     </div>
+
+
+      <div class="col-12 mt-4" id="dataTableContainer" style="display: none;">
+  <h3>Messwerte Tabelle</h3>
+  <div class="table-responsive">
+    <table class="table table-striped table-bordered" id="dataTable">
+      <thead>
+        <tr id="tableHead">
+          <th>#</th>
+          <th>Datum</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody">
+      </tbody>
+    </table>
   </div>
+</div>
+
+  </div>
+
+
 
  <!-- Error Modal -->
 <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
@@ -172,15 +192,15 @@
         sensorId: sensorId
       }).done(response => {
         const { sensorId, dates, measurements } = response;
-
+        $('#dataTableContainer').show();
         if (sensorId === 11496) {
           updateLineChart('pm25Chart', dates, [
-            { label: 'PM2.5 min', data: measurements.map(m => m.min_p2) },
-            { label: 'PM2.5 avg', data: measurements.map(m => m.avg_p2) },
-            { label: 'PM2.5 max', data: measurements.map(m => m.max_p2) },
-            { label: 'PM10 min', data: measurements.map(m => m.min_p1) },
-            { label: 'PM10 avg', data: measurements.map(m => m.avg_p1) },
-            { label: 'PM10 max', data: measurements.map(m => m.max_p1) }
+            { label: 'P1 avg', data: measurements.map(m => m.avg_p1) },
+            { label: 'P1 min', data: measurements.map(m => m.min_p1) },
+            { label: 'P1 max', data: measurements.map(m => m.max_p1) },
+            { label: 'P2 avg', data: measurements.map(m => m.avg_p2) },
+            { label: 'P2 min', data: measurements.map(m => m.min_p2) },
+            { label: 'P2 max', data: measurements.map(m => m.max_p2) }
           ]);
           $('#particleView').show();
           $('#tempHumidityView').hide();
@@ -196,11 +216,65 @@
           $('#tempHumidityView').show();
           $('#particleView').hide();
         }
+        updateTable(dates, measurements);
       }).fail(xhr => {
         const msg = xhr.responseJSON?.error || "Ein Fehler ist aufgetreten.";
         showError(msg);
       });
     });
+
+function updateTable(dates, measurements) {
+  const tableHead = document.getElementById('tableHead');
+  const tableBody = document.getElementById('tableBody');
+  tableBody.innerHTML = "";
+
+  let columns = [];
+  const sensorId = $('#sensorSelect').val();
+  let columnLabels = {};
+
+  if (sensorId === "11496") {
+    columns = ["avg_p1", "min_p1", "max_p1", "avg_p2", "min_p2", "max_p2"];
+    columnLabels = {
+      avg_p1: "P1 Durchschnitt", min_p1: "P1 Min", max_p1: "P1 Max",
+      avg_p2: "P2 Durchschnitt", min_p2: "P2 Min", max_p2: "P2 Max"
+    };
+  } else if (sensorId === "113") {
+    columns = [
+      "avg_temperature", "min_temperature", "max_temperature",
+      "avg_pressure", "min_pressure", "max_pressure",
+      "avg_humidity", "min_humidity", "max_humidity",
+      "altitude",
+      "avg_pressure_sealevel", "min_pressure_sealevel", "max_pressure_sealevel"
+    ];
+    columnLabels = {
+      avg_temperature: "Durchschnittstemperatur", min_temperature: "Kleinste Temperatur", max_temperature: "Höchste Temperatur",
+      avg_pressure: "Durchschnittsdruck", min_pressure: "Kleinster Druck", max_pressure: "Höchster Druck",
+      avg_humidity: "Durchschnittliche Luftfeuchtigkeit", min_humidity: "Geringste Luftfeuchtigkeit", max_humidity: "Höchste Luftfeuchtigkeit",
+      altitude: "Höhe",
+      avg_pressure_sealevel: "Durchschnittsdruck am Meeresspiegel",
+      min_pressure_sealevel: "Kleinster Druck am Meeresspiegel",
+      max_pressure_sealevel: "Höchster Druck am Meeresspiegel"
+    };
+  } else {
+    columns = Object.keys(measurements[0]);
+    columnLabels = Object.fromEntries(columns.map(c => [c, c]));
+  }
+
+  // Tabellenkopf mit angezeigten Labels
+  tableHead.innerHTML = '<th>#</th><th>Datum</th>' +
+    columns.map(col => `<th>${columnLabels[col]}</th>`).join('');
+
+  // Zeilen
+  dates.forEach((date, i) => {
+    const values = columns.map(col => {
+      const val = measurements[i][col];
+      const rounded = (typeof val === 'number') ? val.toFixed(3) : (val ?? '-');
+      return `<td>${rounded}</td>`;
+    }).join('');
+    const row = `<tr><td>${i + 1}</td><td>${date}</td>${values}</tr>`;
+    tableBody.innerHTML += row;
+  });
+}
 
     function updateLineChart(canvasId, labels, datasets) {
       const ctx = document.getElementById(canvasId).getContext('2d');
@@ -225,7 +299,25 @@
             y: { beginAtZero: false }
           },
           plugins: {
-            legend: { position: 'bottom' }
+            legend: { position: 'bottom' },
+          },
+          onHover: (event, chartElements) => {
+            document.querySelectorAll('#tableBody td').forEach(td => {
+              td.classList.remove('cell-highlight');
+            });
+
+            if (chartElements.length > 0) {
+              const chartIndex = chartElements[0].index;
+              const datasetIndex = chartElements[0].datasetIndex;
+
+              const row = document.querySelectorAll('#tableBody tr')[chartIndex];
+              if (row) {
+                const targetCell = row.children[datasetIndex + 2];
+                if (targetCell) {
+                  targetCell.classList.add('cell-highlight');
+                }
+              }
+            }
           }
         }
       });

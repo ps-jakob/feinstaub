@@ -165,3 +165,12 @@ html[data-theme="dark"] canvas {
         min-height: 400px;
     }
 }
+
+  .table-active {
+    background-color: #72bbfc !important;
+  }
+
+    .cell-highlight {
+    background-color: #3ffff9 !important;
+    font-weight: bold;
+  }
