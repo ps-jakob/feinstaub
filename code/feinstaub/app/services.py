@@ -12,14 +12,13 @@ def get_all_sensors():
     """Gibt alle Sensoren zurück."""
     return Sensor.query.all()
 
+
 def get_sensor_by_name(sensor_name):
     """Sucht einen Sensor nach Name."""
     return Sensor.query.filter_by(sensor_name=sensor_name).first()
 
 
 def get_selected_measurement(sensor_id, start_date, end_date):
-
-
     dates = generate_date_range(start_date, end_date)
     formatted_dates = [
         datetime.strptime(date_str, "%Y-%m-%d").strftime("%d.%m.%Y")
@@ -27,21 +26,18 @@ def get_selected_measurement(sensor_id, start_date, end_date):
     ]
     data = []
 
-
     if int(sensor_id) == 11496:
         print("ist in 11496")
         for date in dates:
             entry = ChartDustEntry(
-                max_p1= get_max_p1(date),
+                max_p1=get_max_p1(date),
                 min_p1=get_min_p1(date),
                 avg_p1=get_avg_p1(date),
-                max_p2= get_max_p2(date),
-                min_p2= get_min_p2(date),
-                avg_p2= get_avg_p2(date),
+                max_p2=get_max_p2(date),
+                min_p2=get_min_p2(date),
+                avg_p2=get_avg_p2(date),
             )
             data.append(asdict(entry))
-
-
 
     if int(sensor_id) == 113:
         print("ist in 113")
@@ -70,9 +66,6 @@ def get_selected_measurement(sensor_id, start_date, end_date):
     }
 
 
-
-
-
 def generate_date_range(start_date_str, end_date_str):
     start = datetime.strptime(start_date_str, "%Y-%m-%d")
     end = datetime.strptime(end_date_str, "%Y-%m-%d")
@@ -88,6 +81,7 @@ def generate_date_range(start_date_str, end_date_str):
 
     return date_list
 
+
 def get_max_p1(timestamp):
     sql = text("""
         SELECT MAX(p1) FROM dust_measurement
@@ -96,6 +90,7 @@ def get_max_p1(timestamp):
     like_pattern = f"{timestamp}%"
     result = db.session.execute(sql, {'ts': like_pattern})
     return result.scalar()
+
 
 def get_min_p1(timestamp):
     sql = text("""
@@ -106,6 +101,7 @@ def get_min_p1(timestamp):
     like_pattern = f"{timestamp}%"
     result = db.session.execute(sql, {'ts': like_pattern})
     return result.scalar()
+
 
 def get_avg_p1(timestamp):
     sql = text("""
@@ -137,6 +133,7 @@ def get_min_p2(timestamp):
     result = db.session.execute(sql, {'ts': like_pattern})
     return result.scalar()
 
+
 def get_avg_p2(timestamp):
     sql = text("""
     SELECT AVG(p2) FROM dust_measurement
@@ -145,6 +142,7 @@ def get_avg_p2(timestamp):
     like_pattern = f"{timestamp}%"
     result = db.session.execute(sql, {'ts': like_pattern})
     return result.scalar()
+
 
 def get_min_temp(timestamp):
     sql = text("""
@@ -155,6 +153,7 @@ def get_min_temp(timestamp):
     result = db.session.execute(sql, {'ts': like_pattern})
     return result.scalar()
 
+
 def get_max_temp(timestamp):
     sql = text("""
     SELECT MAX(temperature) FROM weather_measurement
@@ -163,6 +162,7 @@ def get_max_temp(timestamp):
     like_pattern = f"{timestamp}%"
     result = db.session.execute(sql, {'ts': like_pattern})
     return result.scalar()
+
 
 def get_avg_temp(timestamp):
     sql = text("""
@@ -173,6 +173,7 @@ def get_avg_temp(timestamp):
     result = db.session.execute(sql, {'ts': like_pattern})
     return result.scalar()
 
+
 def get_min_pressure(timestamp):
     sql = text("""
     SELECT MIN(pressure) FROM weather_measurement
@@ -181,6 +182,7 @@ def get_min_pressure(timestamp):
     like_pattern = f"{timestamp}%"
     result = db.session.execute(sql, {'ts': like_pattern})
     return result.scalar()
+
 
 def get_max_pressure(timestamp):
     sql = text("""
@@ -191,6 +193,7 @@ def get_max_pressure(timestamp):
     result = db.session.execute(sql, {'ts': like_pattern})
     return result.scalar()
 
+
 def get_avg_pressure(timestamp):
     sql = text("""
     SELECT AVG(pressure) FROM weather_measurement
@@ -199,6 +202,7 @@ def get_avg_pressure(timestamp):
     like_pattern = f"{timestamp}%"
     result = db.session.execute(sql, {'ts': like_pattern})
     return result.scalar()
+
 
 def get_min_humidity(timestamp):
     sql = text("""
@@ -209,6 +213,7 @@ def get_min_humidity(timestamp):
     result = db.session.execute(sql, {'ts': like_pattern})
     return result.scalar()
 
+
 def get_max_humidity(timestamp):
     sql = text("""
     SELECT MAX(humidity) FROM weather_measurement
@@ -218,6 +223,7 @@ def get_max_humidity(timestamp):
     result = db.session.execute(sql, {'ts': like_pattern})
     return result.scalar()
 
+
 def get_avg_humidity(timestamp):
     sql = text("""
     SELECT AVG(humidity) FROM weather_measurement
@@ -226,6 +232,7 @@ def get_avg_humidity(timestamp):
     like_pattern = f"{timestamp}%"
     result = db.session.execute(sql, {'ts': like_pattern})
     return result.scalar()
+
 
 def get_avg_altitude(timestamp):
     sql = text("""
@@ -246,6 +253,7 @@ def get_min_pressure_sealevel(timestamp):
     result = db.session.execute(sql, {'ts': like_pattern})
     return result.scalar()
 
+
 def get_max_pressure_sealevel(timestamp):
     sql = text("""
     SELECT MAX(pressure_sealevel) FROM weather_measurement
@@ -255,6 +263,7 @@ def get_max_pressure_sealevel(timestamp):
     result = db.session.execute(sql, {'ts': like_pattern})
     return result.scalar()
 
+
 def get_avg_pressure_sealevel(timestamp):
     sql = text("""
     SELECT AVG(pressure_sealevel) FROM weather_measurement
@@ -263,4 +272,3 @@ def get_avg_pressure_sealevel(timestamp):
     like_pattern = f"{timestamp}%"
     result = db.session.execute(sql, {'ts': like_pattern})
     return result.scalar()
-

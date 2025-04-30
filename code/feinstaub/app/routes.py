@@ -78,7 +78,5 @@ def get_measurements_api():
     if not sensor_id or not start_date or not end_date:
         return jsonify({"error": "Bitte vonDatum, bisDatum und sensorId angeben"}), 400
 
-
-
     measurements = get_selected_measurement(sensor_id, start_date, end_date)
     return jsonify(measurements)
