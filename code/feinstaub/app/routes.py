@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 import os
 import pandas as pd
 from .models import db, Location, Sensor, DustMeasurement, WeatherMeasurement
+from .services import get_selected_measurement
 
 api = Blueprint('api', __name__)
 
@@ -64,3 +65,18 @@ def import_data():
             db.session.commit()
 
     return jsonify({'message': 'Data import completed'}), 200
+
+@api.route('/get-measurements', methods=['GET'])
+def get_measurements_api():
+    """API-Endpunkt für Messwerte basierend auf vonDatum, bisDatum und sensorId"""
+    sensor_id = request.args.get("sensorId")
+    start_date = request.args.get("vonDatum")
+    end_date = request.args.get("bisDatum")
+
+    print(start_date)
+
+    if not sensor_id or not start_date or not end_date:
+        return jsonify({"error": "Bitte vonDatum, bisDatum und sensorId angeben"}), 400
+
+    measurements = get_selected_measurement(sensor_id, start_date, end_date)
+    return jsonify(measurements)
