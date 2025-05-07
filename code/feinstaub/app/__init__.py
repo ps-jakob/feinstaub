@@ -9,6 +9,7 @@ def create_app():
     app.config.from_object(Config)
     print("das ist der static path")
     print(os.path.abspath("static"))
+
     db.init_app(app) 
     Migrate(app, db)
 
