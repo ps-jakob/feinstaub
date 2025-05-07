@@ -10,7 +10,6 @@ def create_app():
     print("das ist der static path")
     print(os.path.abspath("static"))
 
-
     db.init_app(app) 
     Migrate(app, db)
 
