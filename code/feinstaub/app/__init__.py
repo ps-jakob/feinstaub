@@ -7,6 +7,8 @@ from .database import db
 def create_app():
     app = Flask(__name__, template_folder="../templates", static_folder=os.path.abspath("static"))
     app.config.from_object(Config)
+    print("das ist der static path")
+    print(os.path.abspath("static"))
 
     db.init_app(app) 
     Migrate(app, db)
