@@ -1,7 +1,5 @@
 from dataclasses import asdict
 
-from flask import request
-
 from dto.chart_dto import ChartDustEntry, ChartWeatherEntry
 from .models import db, Sensor, DustMeasurement, WeatherMeasurement
 from sqlalchemy import func, nullsfirst, text
@@ -272,3 +270,7 @@ def get_avg_pressure_sealevel(timestamp):
     like_pattern = f"{timestamp}%"
     result = db.session.execute(sql, {'ts': like_pattern})
     return result.scalar()
+
+#def export_to_xml(sensor_id, measurement_id):
+
+

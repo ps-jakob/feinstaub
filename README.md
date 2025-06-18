@@ -22,4 +22,3 @@ Es wird Text in der Konsole erscheinen mit einer URL mit einer Lokalen IP Adress
 
 So sollte da Programm aussehen:
 ![image](https://github.com/user-attachments/assets/408ddbe2-da14-4dff-b587-99d4056879d0)
-
